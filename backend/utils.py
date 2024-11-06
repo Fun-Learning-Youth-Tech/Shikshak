@@ -8,9 +8,12 @@ def log_interaction(student_id, query, response):
         "response": response,
         "timestamp": datetime.now().isoformat()
     }
-    with open("interaction_log.json", "a") as log_file:
-        json.dump(log_data, log_file)
-        log_file.write("\n")
+    try:
+        with open("interaction_log.json", "a") as log_file:
+            json.dump(log_data, log_file)
+            log_file.write("\n")
+    except Exception as e:
+        print(f"Error writing to log file: {e}")
 
 def run_cli():
     print("Welcome to the Educational Assistant!")
@@ -24,4 +27,3 @@ def run_cli():
         log_interaction(student_id, query, response)
 
 run_cli()
-
