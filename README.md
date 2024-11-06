@@ -6,3 +6,5 @@ I built this app with Python on backend and JavaScipt on frontend. Since this wa
 I called the Cerebras API key and used a RAG model to refine the algorithm. I then stored user data after removing names and personal information and replacing them with their student IDs. The plan is to keep enough information to curate Shikshak so it can best teach students in a way they can understand and access information from the world. It keeps students engaged with interactive problem solving while maintaining anonymity.
 
 Cerebras Fast Inference helps me solve the problem of minimal connectivity and multilingual input and output. It helps me load student data and create student profiles based on that. The biggest problems in this projects are effectively solved by Cerebras’ Fast Inference which acts as a bridge between the vast information on the internet and underprivileged students in developing countries.
+
+![FLY Image](<Screenshot 2024-11-06 at 2.25.59.png>)
