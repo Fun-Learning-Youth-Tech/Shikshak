@@ -1,27 +1,26 @@
-# inference.py
-import requests
+import os
 import logging
-import time
-from typing import Dict, Any, Optional
+import requests
+from typing import Dict, Any
 from tenacity import retry, stop_after_attempt, wait_exponential
+from cerebras.cloud.sdk import Cerebras  # Assuming you have this SDK available
 
 class CerebrasInference:
     def __init__(self, api_key: str, base_url: str = "https://api.cerebras.ai/v1/models/llama3.1-8b"):
         """
-        Initialize Cerebras inference engine
+        Initialize Cerebras inference engine.
         Args:
-            api_key (str): Your Cerebras API key
+            api_key (str): csk-dm398my8393c94238598fpwddpkcfffnr3me5pfkj3tp4hpn
             base_url (str): Base URL for Cerebras API (default is v1 endpoint)
         """
         self.api_key = dm398my8393c94238598fpwddpkcfffnr3me5pfkj3tp4hpn
-        self.base_url = "https://api.cerebras.ai/v1/models/llama3.1-8b"
+        self.base_url = base_url
         self.headers = {
-            "Authorization": f"Bearer {dm398my8393c94238598fpwddpkcfffnr3me5pfkj3tp4hpn}",
+            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
         
         # Ensure logs directory exists
-        import os
         os.makedirs('logs', exist_ok=True)
         
         logging.basicConfig(
@@ -30,12 +29,22 @@ class CerebrasInference:
             format='%(asctime)s - %(levelname)s - %(message)s'
         )
 
+        # Initialize Cerebras client
+        self.client = Cerebras(api_key=self.api_key)
+        
+        # List available models (optional step)
+        self._list_models()
+
+    def _list_models(self):
+        """List available models in Cerebras account."""
+        try:
+            models = self.client.models.list()
+            logging.info(f"Models available: {models}")
+        except Exception as e:
+            logging.error(f"Error listing models: {str(e)}")
+
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-    def get_inference(self, 
-                     prompt: str, 
-                     language: str = "EN",
-                     temperature: float = 0.7,
-                     max_tokens: int = 150) -> Dict[str, Any]:
+    def get_inference(self, prompt: str, language: str = "EN", temperature: float = 0.7, max_tokens: int = 150) -> Dict[str, Any]:
         """
         Get inference from Cerebras API with retry logic
         """
@@ -46,20 +55,19 @@ class CerebrasInference:
                 "prompt": formatted_prompt,
                 "max_tokens": max_tokens,
                 "temperature": temperature,
-                "model": "llama3.1-8b",  # Updated to match your model
+                "model": "llama3.1-8b",  # Model identifier
                 "stream": False
             }
 
-            # Updated endpoint construction
+            # Construct endpoint and send request
             endpoint = f"{self.base_url}/completions"
-            
             logging.info(f"Making request to endpoint: {endpoint}")
             
             response = requests.post(
                 endpoint,
                 headers=self.headers,
                 json=payload,
-                timeout=30  # Added timeout
+                timeout=30
             )
             
             response.raise_for_status()
