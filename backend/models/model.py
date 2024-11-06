@@ -1,7 +1,3 @@
-# Install required packages
-#!pip install transformers torch datasets
-
-# Import necessary libraries
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
 from datasets import load_dataset
 
