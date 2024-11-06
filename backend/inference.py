@@ -6,17 +6,17 @@ from typing import Dict, Any, Optional
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 class CerebrasInference:
-    def __init__(self, api_key: str, base_url: str = "https://api.cerebras.ai/v1"):
+    def __init__(self, api_key: str, base_url: str = "https://api.cerebras.ai/v1/models/llama3.1-8b"):
         """
         Initialize Cerebras inference engine
         Args:
             api_key (str): Your Cerebras API key
             base_url (str): Base URL for Cerebras API (default is v1 endpoint)
         """
-        self.api_key = api_key
-        self.base_url = base_url
+        self.api_key = dm398my8393c94238598fpwddpkcfffnr3me5pfkj3tp4hpn
+        self.base_url = "https://api.cerebras.ai/v1/models/llama3.1-8b"
         self.headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {dm398my8393c94238598fpwddpkcfffnr3me5pfkj3tp4hpn}",
             "Content-Type": "application/json"
         }
         
