@@ -1,20 +1,105 @@
+# inference.py
 import requests
-import os
+import logging
+import time
+from typing import Dict, Any, Optional
+from tenacity import retry, stop_after_attempt, wait_exponential
 
-# Get API Key from environment variable for security
-api_key = os.getenv('csk-dm398my8393c94238598fpwddpkcfffnr3me5pfkj3tp4hpn', 'csk-255c4k9cppdxcfck6evt6pphnv4k38k9fm8c92tjv5fnjcd8')  # Default for development
-url = "https://api.cerebras.ai/v1/models/llama3.1-8b"
-headers = {"Authorization": f"Bearer {api_key}"}
+class CerebrasInference:
+    def __init__(self, api_key: str, base_url: str = "https://api.cerebras.ai/v1"):
+        """
+        Initialize Cerebras inference engine
+        Args:
+            api_key (str): Your Cerebras API key
+            base_url (str): Base URL for Cerebras API (default is v1 endpoint)
+        """
+        self.api_key = api_key
+        self.base_url = base_url
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        # Ensure logs directory exists
+        import os
+        os.makedirs('logs', exist_ok=True)
+        
+        logging.basicConfig(
+            filename='logs/cerebras_inference.log',
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s'
+        )
 
-def get_inference(prompt):
-    data = {"input": prompt}
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()  # Raise an exception for bad status codes
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        return {"error": str(e)}  # Return error message if request fails
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+    def get_inference(self, 
+                     prompt: str, 
+                     language: str = "EN",
+                     temperature: float = 0.7,
+                     max_tokens: int = 150) -> Dict[str, Any]:
+        """
+        Get inference from Cerebras API with retry logic
+        """
+        try:
+            formatted_prompt = self._format_prompt(prompt, language)
+            
+            payload = {
+                "prompt": formatted_prompt,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "model": "llama3.1-8b",  # Updated to match your model
+                "stream": False
+            }
 
-# Example usage
-result = get_inference("What is the capital of India?")
-print(result)
+            # Updated endpoint construction
+            endpoint = f"{self.base_url}/completions"
+            
+            logging.info(f"Making request to endpoint: {endpoint}")
+            
+            response = requests.post(
+                endpoint,
+                headers=self.headers,
+                json=payload,
+                timeout=30  # Added timeout
+            )
+            
+            response.raise_for_status()
+            result = response.json()
+            
+            logging.info(f"Successfully got inference for prompt: {prompt[:50]}...")
+            return self._process_response(result)
+
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Cerebras API request failed: {str(e)}")
+            raise
+
+    def _format_prompt(self, prompt: str, language: str) -> str:
+        """Format the prompt with language and educational context"""
+        language_tokens = {
+            "EN": "Answer in English:",
+            "ES": "Responde en español:",
+            "FR": "Répondez en français:",
+            "DE": "Antworten Sie auf Deutsch:",
+            "ZH": "用中文回答："
+        }
+        
+        language_prefix = language_tokens.get(language, language_tokens["EN"])
+        educational_context = "As an educational AI assistant, provide a clear and detailed explanation."
+        
+        return f"{educational_context}\n{language_prefix}\n{prompt}"
+
+    def _process_response(self, api_response: Dict[str, Any]) -> Dict[str, Any]:
+        """Process and format the API response"""
+        try:
+            return {
+                "response": api_response.get("choices", [{}])[0].get("text", ""),
+                "usage": api_response.get("usage", {}),
+                "model": api_response.get("model", ""),
+                "status": "success"
+            }
+        except Exception as e:
+            logging.error(f"Error processing API response: {str(e)}")
+            return {
+                "response": "Sorry, I couldn't process the response properly.",
+                "status": "error",
+                "error": str(e)
+            }

@@ -3,21 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Educational Assistant</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Shikshak</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 240px);
+        }
+        .message {
+            max-width: 80%;
+        }
+        .message-student {
+            background-color: #E3F2FD;
+        }
+        .message-bot {
+            background-color: #F5F5F5;
+        }
+        .typing-indicator {
+            display: flex;
+            padding: 15px;
+            width: 60px;
+            justify-content: center;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            margin: 0 2px;
+            background-color: #90A4AE;
+            border-radius: 50%;
+            animation: bounce 1.3s linear infinite;
+        }
+        .dot:nth-child(2) { animation-delay: 0.15s; }
+        .dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Shikshak</h1>
-        <p>Ask me a question!</p>
-        <div class="input-section">
-            <textarea id="query" placeholder="Type your question here..."></textarea>
-            <button onclick="submitQuery()">Ask</button>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Shikshak</h1>
+            <p class="text-gray-600">Ask me anything!</p>
+        </header>
+
+        <!-- Language and Student ID Selection -->
+        <div class="flex flex-wrap gap-4 mb-6">
+            <select id="languageSelect" class="flex-1 p-2 border rounded-lg bg-white shadow-sm">
+                <option value="EN">English</option>
+                <option value="ES">Español</option>
+                <option value="FR">Français</option>
+                <option value="DE">Deutsch</option>
+                <option value="ZH">中文</option>
+            </select>
+            <input type="text" id="studentId" placeholder="Enter Student ID" 
+                   class="flex-1 p-2 border rounded-lg shadow-sm" required>
         </div>
 
-        <div id="response" class="response"></div>
+        <!-- Chat Container -->
+        <div class="bg-white rounded-lg shadow-lg p-4 mb-4">
+            <div id="chatContainer" class="chat-container overflow-y-auto mb-4">
+                <div class="message message-bot rounded-lg p-4 mb-4 ml-2">
+                    <p>Hello! I'm your AI teaching assistant. How can I help you today?</p>
+                </div>
+            </div>
+
+            <!-- Message Input -->
+            <form id="messageForm" class="flex gap-2">
+                <input type="text" id="messageInput" 
+                       class="flex-1 p-3 border rounded-lg shadow-sm"
+                       placeholder="Type your question here...">
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    Send
+                </button>
+            </form>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="text-center text-sm text-gray-600"></div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageForm = document.getElementById('messageForm');
+            const messageInput = document.getElementById('messageInput');
+            const languageSelect = document.getElementById('languageSelect');
+            const studentId = document.getElementById('studentId');
+            const statusMessage = document.getElementById('statusMessage');
+
+            function addMessage(content, isBot = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isBot ? 'message-bot ml-2' : 'message-student ml-auto'} rounded-lg p-4 mb-4`;
+                messageDiv.innerHTML = `<p>${content}</p>`;
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            function addTypingIndicator() {
+                const indicator = document.createElement('div');
+                indicator.className = 'typing-indicator message-bot rounded-lg mb-4';
+                indicator.innerHTML = `
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                `;
+                chatContainer.appendChild(indicator);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                return indicator;
+            }
+
+            async function sendMessage(message) {
+                if (!studentId.value) {
+                    statusMessage.textContent = 'Please enter a Student ID';
+                    return;
+                }
+
+                addMessage(message);
+                const typingIndicator = addTypingIndicator();
+                
+                try {
+                    const response = await fetch('http://localhost:5000/ask', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            student_id: studentId.value,
+                            query: message,
+                            language: languageSelect.value
+                        })
+                    });
+
+                    typingIndicator.remove();
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    addMessage(data.response, true);
+                    statusMessage.textContent = '';
+                } catch (error) {
+                    typingIndicator.remove();
+                    statusMessage.textContent = 'Error: Could not get response from server';
+                    console.error('Error:', error);
+                }
+            }
+
+            messageForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const message = messageInput.value.trim();
+                if (message) {
+                    sendMessage(message);
+                    messageInput.value = '';
+                }
+            });
+
+            // Enter key handler
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    messageForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+    </script>
 </body>
 </html>
