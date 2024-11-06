@@ -1,0 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environment directory
+venv/
+myenv/
+
+# VS Code specific files
+.vscode/
+
+# Environment variables file
+.env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Log files
+*.log
+
+# Cached data
+*.cache
+*.pytest_cache/
+.cache/
+
+# IDE-specific files
+.idea/
+*.swp
+*.swo
+
+# Model or large data files (if applicable)
+*.h5
+*.ckpt
+*.pth
+*.pt
+*.onnx
+
+# Other temporary files
+*.tmp
+*.temp
+.DS_Store
