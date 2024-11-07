@@ -3,7 +3,7 @@ import logging
 import requests
 from typing import Dict, Any
 from tenacity import retry, stop_after_attempt, wait_exponential
-from cerebras.cloud.sdk import Cerebras  # Assuming you have this SDK available
+from cerebras.cloud.sdk import Cerebras  
 
 class CerebrasInference:
     def __init__(self, api_key: str, base_url: str = "https://api.cerebras.ai/v1/models/llama3.1-8b"):
