@@ -1,5 +1,5 @@
 # Teacher-AI (Shikshak)
-With Cerebras’ Fast Inferface, we built a Teaching and Mentoring Chatbot, Shikshak, that will curate suggestions and responses based on each student’s individual profiles. It is multilingual, prompts small step by step tasks encouraging students to think, and can work in low-internet conditions. 
+With Cerebras’ Fast Inferface with Claude API, we built a Teaching and Mentoring Chatbot, Shikshak, that will curate suggestions and responses based on each student’s individual profiles. It is multilingual, prompts small step by step tasks encouraging students to think, and can work in low-internet conditions. 
 
 ![FLY Image](<Screenshot 2024-11-06 at 2.25.59.png>)
 
