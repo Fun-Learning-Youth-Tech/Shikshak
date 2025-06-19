@@ -10,10 +10,10 @@ class CerebrasInference:
         """
         Initialize Cerebras inference engine.
         Args:
-            api_key (str): csk-dm398my8393c94238598fpwddpkcfffnr3me5pfkj3tp4hpn
+            api_key (str): x
             base_url (str): Base URL for Cerebras API (default is v1 endpoint)
         """
-        self.api_key = dm398my8393c94238598fpwddpkcfffnr3me5pfkj3tp4hpn
+        self.api_key = x
         self.base_url = base_url
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
